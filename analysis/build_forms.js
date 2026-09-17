@@ -13,12 +13,12 @@ const BORDERS = { top: THIN, bottom: THIN, left: THIN, right: THIN };
 function P(text, opts = {}) {
   return new Paragraph({
     alignment: opts.align || AlignmentType.LEFT,
-    spacing: { line: 276, after: opts.after ?? 80 },
+    spacing: { line: 384, after: opts.after ?? 80 }, // 줄간격 160%
     children: [
       new TextRun({
         text,
         font: FONT,
-        size: (opts.size || 21) * 2, // half-points
+        size: (opts.size || 11) * 2, // half-points (공모요강 규정: 11pt)
         bold: !!opts.bold,
       }),
     ],
