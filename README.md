@@ -70,8 +70,10 @@ report/               서식4 보고서 초안 (예정)
 - [x] 공모요강 분석, 제출 요건 파악
 - [x] 분석 대상 지역 확정: 양양군(공급 과잉 의심) vs 신안군(공급 억제)
 - [ ] 연도별 수요/공급/체류성과 데이터 수집 (양양군 + 신안군, 2017~2025)
-- [ ] TOUR-GAP 지표 설계 및 계산
-- [ ] 회고적 검증(backtest) 분석
-- [ ] 서식4 보고서 작성 (최소 2장~최대 3장)
+- [x] TOUR-GAP 지표 설계 및 계산 (`analysis/tourgap_index.py`, `data/tourgap_index_merged.csv`)
+- [x] 회고적 검증(backtest) 분석 — TOUR-GAP 128pt 초과(양양군 2023) 다음 해 체류성과 하락 패턴 확인
+- [x] 차트 2종 생성 (`report/figures/`)
+- [x] 서식4 보고서 초안 작성 (`report/report_draft.md`)
+- [ ] 서식4 초안 → 실제 .hwp 템플릿에 옮겨 최종 포맷팅 (분량 2~3장, 함초롱바탕 11pt, 줄간격160)
 - [ ] 참가신청서 등 제출서류 작성 (개인정보 기재 필요 — 본인 작성)
 - [ ] 9.30(수) 14:00 이전 온라인 신청 폼 제출: https://forms.gle/gHtptTMGw13rTETE8
