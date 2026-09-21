@@ -63,7 +63,8 @@ async function saveDoc(doc, outPath) {
 // ---------------------------------------------------------------
 // 서식 1-1: 참가신청서 (개인/팀용)
 // ---------------------------------------------------------------
-async function buildForm1_1(v) {
+async function buildForm1_1(v, title) {
+  v = { ...v, title };
   const rows = [
     new TableRow({ children: [
       cell("참가 구분", { width: 2500, shade: true, bold: true }),
@@ -318,7 +319,7 @@ async function buildForm4(v, sections, figures) {
 const V = JSON.parse(fs.readFileSync("submission/personal_info.json", "utf-8"));
 
 const SECTIONS = {
-  title: "TOUR-GAP: 수요·공급 압력 교차검증으로 지역 숙박정책의 착시를 걷어내다",
+  title: "TOUR-GAP: 관광객이 많으면 숙박시설도 늘려야 할까 — 수요·공급 압력 교차검증으로 밝혀낸 지역 숙박정책의 착시",
   dataUsed: "지역별 관광 현황(방문자, 숙박/체류시간), 관광산업분석-숙박업종별 세부현황(숙박시설 개/폐업현황)",
   dataOther: "없음 (데이터랩 데이터만으로 방법론 구성)",
   field: "☑ 전략수립 및 기획",
@@ -360,7 +361,7 @@ const FIGURES = [
 ];
 
 (async () => {
-  await buildForm1_1(V);
+  await buildForm1_1(V, SECTIONS.title);
   await buildForm2(V);
   await buildForm3(V);
   await buildForm4(V, SECTIONS, FIGURES);
