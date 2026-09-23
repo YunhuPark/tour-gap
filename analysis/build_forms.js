@@ -32,7 +32,9 @@ function cell(text, opts = {}) {
     verticalAlign: VerticalAlign.CENTER,
     columnSpan: opts.colSpan,
     borders: BORDERS,
-    children: Array.isArray(text) ? text : [P(text, { size: opts.size, bold: opts.bold, after: 0 })],
+    children: Array.isArray(text)
+      ? text
+      : String(text).split("\n").map((line) => P(line, { size: opts.size, bold: opts.bold, after: 0 })),
   });
 }
 
@@ -224,7 +226,7 @@ async function buildForm3(v) {
 // ---------------------------------------------------------------
 // 서식 4: 활용사례 작성양식
 // ---------------------------------------------------------------
-async function buildForm4(v, sections, figures) {
+async function buildForm4(v, sections) {
   const headerRows = [
     new TableRow({ children: [
       cell("소속기관명", { width: 1800, shade: true, bold: true }),
@@ -271,7 +273,34 @@ async function buildForm4(v, sections, figures) {
     ]}),
   ];
 
-  function numberedSection(no, heading, bullets) {
+  function matrixTable(m) {
+    // m = { corner, colHeads: [c1,c2], rows: [{head, cells:[a,b]}, ...] }
+    const colW = [2600, 3375, 3375];
+    return new Table({ width: { size: TABLE_WIDTH, type: WidthType.DXA }, rows: [
+      new TableRow({ children: [
+        cell(m.corner, { width: colW[0], shade: true, bold: true }),
+        cell(m.colHeads[0], { width: colW[1], shade: true, bold: true }),
+        cell(m.colHeads[1], { width: colW[2], shade: true, bold: true }),
+      ]}),
+      ...m.rows.map((r) => new TableRow({ children: [
+        cell(r.head, { width: colW[0], shade: true, bold: true }),
+        cell(r.cells[0], { width: colW[1] }),
+        cell(r.cells[1], { width: colW[2] }),
+      ]})),
+    ]});
+  }
+
+  function numberedSection(no, heading, items) {
+    const body = [];
+    for (const item of items) {
+      if (typeof item === "string") {
+        body.push(P("○ " + item, { after: 100 }));
+      } else if (item.table) {
+        body.push(P("", { after: 60 }));
+        body.push(matrixTable(item.table));
+        body.push(P("", { after: 100 }));
+      }
+    }
     return [
       new Table({ width: { size: TABLE_WIDTH, type: WidthType.DXA }, rows: [
         new TableRow({ children: [
@@ -279,18 +308,9 @@ async function buildForm4(v, sections, figures) {
           cell(heading, { width: 8750, shade: true, bold: true }),
         ]}),
       ]}),
-      ...bullets.map((b) => P("○ " + b, { after: 100 })),
+      ...body,
       P("", { after: 100 }),
     ];
-  }
-
-  const figParas = [];
-  for (const fig of figures) {
-    figParas.push(new Paragraph({
-      children: [new ImageRun({ data: fs.readFileSync(fig.path), transformation: { width: 460, height: 268 }, type: "png" })],
-      alignment: AlignmentType.CENTER,
-    }));
-    figParas.push(P(fig.caption, { align: AlignmentType.CENTER, size: 18, after: 200 }));
   }
 
   const doc = new Document({
@@ -306,9 +326,9 @@ async function buildForm4(v, sections, figures) {
         ...numberedSection("2)", "현안사항 해결을 위한 데이터 활용 방안", sections.approach),
         ...numberedSection("3)", "데이터 활용을 통한 사업 개선 및 적용 사례", sections.applied),
         ...numberedSection("4)", "추진성과 및 기대효과", sections.outcome),
-        P("", { after: 200 }),
-        P("붙임: 참고자료(그림)", { bold: true, after: 150 }),
-        ...figParas,
+        P("", { after: 150 }),
+        P("* 관련 계획안/결과보고서/실적보고서, 사진 등 첨부(모든 제출자료는 Zip파일로 압축하여 제출)", { size: 10, after: 40 }),
+        P("* 개조식으로 작성, 분량은 최소 2장~최대 3장 이내(글씨체 및 크기: 함초롱바탕 11pt, 줄간격 160)", { size: 10 }),
       ],
     }],
   });
@@ -319,50 +339,68 @@ async function buildForm4(v, sections, figures) {
 const V = JSON.parse(fs.readFileSync("submission/personal_info.json", "utf-8"));
 
 const SECTIONS = {
-  title: "TOUR-GAP: 관광객이 많으면 숙박시설도 늘려야 할까 — 수요·공급 압력 교차검증으로 밝혀낸 지역 숙박정책의 착시",
-  dataUsed: "지역별 관광 현황(방문자, 숙박/체류시간), 관광산업분석-숙박업종별 세부현황(숙박시설 개/폐업현황)",
-  dataOther: "없음 (데이터랩 데이터만으로 방법론 구성)",
+  title: "관광객이 많으면 숙박시설도 늘려야 할까? - TOUR-GAP, 수요·공급압력·실제 체류성과를 교차 검증하는 지역관광 의사결정 시스템",
+  dataUsed: "지역별 방문자수(외지인), 내비게이션 목적지 검색(숙박), 신용카드 관광지출(외지인), 숙박/체류시간(숙박방문자 비율·평균 체류시간·평균 숙박일수)",
+  dataOther: "행정안전부 지방행정 인허가 원시데이터: 문화_숙박업, 문화_관광숙박업(인허가일·영업상태·객실수)",
   field: "☑ 전략수립 및 기획",
-  coreResult: "방문자 증가율이 낮았던 양양군의 신규 숙박시설이 신안군보다 5.6배 많았음을 데이터로 규명하고, 공급-수요 격차(TOUR-GAP 지수)가 일정 수준을 넘은 지역에서 이듬해 숙박방문자비율·체류시간이 하락 전환한다는 조기경보 패턴을 실증 검증함.",
+  coreResult: "공식 객실자료와 실제 체류 outcome으로 평창·원주 판단 2건을 교정하고 홍천을 혼합병목 우선진단으로 도출했다. 홍천 고수요 신호는 월별 12/12개월 유지됐고, 분석 종료 후 공식 야간·체류형 사업과 방향적 정합성을 확인했다.",
   metrics: [
-    "양양군 신규 숙박시설 169개(2017~2025) vs 신안군 30개 - 5.6배 격차 규명",
-    "양양군 TOUR-GAP 지수 128pt 초과(2023) 이후 숙박방문자비율 -3.0%p, 평균체류시간 -127분(-11.5%) 하락 확인(2024년)",
-    "신안군은 TOUR-GAP 103pt로 낮게 유지되며 같은 기간 평균체류시간 +48분(2020→2025) 개선",
-    "방문자수 증가율은 신안군(2019 대비 +27.7%)이 양양군(+12.6%)보다 오히려 높음에도 숙박공급은 정반대로 양양군에 쏠림",
+    "18개 시군×12개월 / 일반 숙박업 3,027개·96,511실+관광숙박업 281개 / 고수요 9개→4 Decision Type",
+    "판단교정 2건(평창·원주)+홍천 우선진단 1곳",
+    "홍천 고수요 12/12개월·rolling 6개월 7/7 / 108개 민감도 조합에서 핵심 유형 108/108 유지",
   ],
   problem: [
-    "지자체·투자자가 방문자수만 보고 숙박 인허가·투자를 결정하는 경우가 많아, 실제 수요 증가 속도와 무관하게 공급이 과잉되거나 부족해지는 지역이 발생",
-    "강원 양양군은 서핑관광 붐 이후 소형 생활숙박업 중심으로 숙박시설이 급증했으나, 이 공급 확대가 실제 체류 성과로 이어지는지 검증된 바 없음",
-    "전남 신안군처럼 도서·오지형 관광지는 수요가 꾸준히 늘어도 공급이 억제되어 기회를 놓치고 있을 가능성이 있으나, 판단 근거(지표)가 없어 정책 우선순위를 정하기 어려움",
+    "관광수요가 높거나 숙박검색이 많다는 이유만으로 숙박시설 확충을 우선하면 실제 체류행태와 다른 의사결정을 할 수 있음",
+    "숙박 목적지 검색은 실제 투숙이 아니라 관심·탐색을 나타내는 proxy이므로, 검색량만으로 숙박 전환 성과를 판단하면 오진 가능성이 있음",
+    "같은 고수요 지역도 실제 체류성과가 높을 수 있고 낮을 수 있어, 수요·공급·성과를 한 점수로 합치기보다 서로 다른 축으로 확인할 필요가 있음",
+    "따라서 '수요 확인 → 공급압력 확인 → 실제 체류성과 검증 → 후속 조사 순서 결정'의 단계형 진단체계를 구축함",
   ],
   approach: [
-    "데이터랩 '지역별 관광 현황(방문자)'에서 연도별 방문자수(외지인, 연인원)를 추출해 2019=100 기준 수요압력지수 산출",
-    "데이터랩 '숙박업종별 세부현황'(행정안전부 지방행정 인허가 데이터 기반)에서 2017~2025년 업종별 신규 개업 건수를 지자체별로 집계, 누적 개업 수를 2019=100 기준 공급압력지수로 환산",
-    "두 지수의 차이(TOUR-GAP = 공급압력지수 - 수요압력지수)를 연도별로 계산해 공급이 수요를 얼마나 앞질렀는지 정량화",
-    "데이터랩 '숙박/체류시간' 메뉴의 숙박방문자비율(%), 평균 체류시간(분)을 실제 체류성과 지표로 삼아 TOUR-GAP과 1년 시차를 두고 교차검증(회고적 백테스트)",
-    "서핑관광 붐 지역(양양군)과 도서·오지형 관광지(신안군) 두 곳에 동일 방법론을 적용해 대조 검증",
+    "분석 범위: 강원 18개 시군, 2025-08~2026-07(12개월). 공급은 인허가·폐업·취소·휴업 상태를 반영해 2026-07-31 시점으로 재구성",
+    "체류수요(Stay Demand) = 외지인 방문·숙박 목적지 검색·외지인 관광지출을 강원 18개 시군 내 percentile로 변환한 뒤 평균. 데이터랩 공식 '관광수요 지수'와 구분되는 자체 파생지표로 명시",
+    "공급커버리지(Supply Coverage) = 일반 숙박업(시설 percentile 30% + 객실 percentile 70%; 객실값 보유율 99.93%)과 관광숙박업 영업시설 percentile의 평균. 관광숙박업 객실은 결측 편차로 제외. Consensus Gap = Stay Demand - Supply Coverage이며 법적 업종 원시량은 합산하지 않음",
+    "실제 체류깊이(Observed Stay Depth) = 모델 산식에 사용하지 않은 평균 체류시간 percentile과 평균 숙박일수 percentile의 평균. proxy 가설을 검증하는 독립 outcome으로 사용",
+    "고수요 지역(Stay Demand ≥ 50)을 집중 비교하고, Gap의 부호와 Stay Depth 50 기준으로 4개 Decision Type을 분류. Gap과 outcome의 관계는 Spearman 상관으로 별도 검정",
+    "※ Consensus Gap은 수익성·객실 증설량을 의미하지 않으며, proxy와 실제 outcome이 충돌하면 실제 체류성과를 우선해 재분류함",
   ],
   applied: [
-    "양양군: 2017~2025년 신규 숙박시설 169개(전체 344개 중 49%) 개업 확인, 이 중 69.2%가 생활숙박업(펜션·게스트하우스류). 공급압력지수 산출 결과 2023년 TOUR-GAP 128pt로 임계 구간을 넘어섰고, 2024년부터 숙박방문자비율(24.7%→21.7%→21.0%)과 평균체류시간(1,109분→982분→1,007분)이 동반 하락 - 공급과잉 조짐을 사후 데이터로 실증 (붙임 그림1, 그림2)",
-    "신안군: 같은 기간 신규 숙박시설은 30개(전체 71개 중 42%)에 그쳤으나 방문자수는 2019년 대비 +27.7%로 양양군(+12.6%)보다 더 크고 꾸준하게 증가. TOUR-GAP은 2025년 103pt로 양양군보다 낮게 유지됐고, 숙박방문자비율(16.0%→17.1%)·체류시간(1,767분→1,815분)은 오히려 소폭 개선 - 공급이 억제돼도 체류 질이 유지·개선될 수 있음을 확인",
-    "두 사례 교차비교로 'TOUR-GAP이 약 120~130pt 이상을 지속적으로 넘어서면 다음 해 체류성과 지표가 하락 전환한다'는 조기경보 패턴을 도출, 지자체 숙박 인허가 총량 관리·투자 유치 판단에 활용 가능한 간단한 정량 기준을 제시",
+    "초기 모델은 원주시를 '방문 대비 숙박검색이 약한 지역'으로 해석했으나, 숙박/체류시간 실제 outcome을 추가해 가설을 재검증함",
+    "원주 실제 결과: 평균 체류시간 1,866분(강원 3/18위), 평균 숙박일수 2.81일(2/18위), Stay Depth 91.67. 월평균 숙박방문자 비율도 전국 기초지자체 평균보다 +6.69%p 높고 12/12개월 상회",
+    "이에 '숙박검색 약세 = 실제 숙박 전환 약세' 가설 1건을 폐기하고 원주를 '공급압력 + 체류성과 양호'로 재분류. 추가 객실 검토보다 가동률·ADR·성수기 공실 확인을 선행하도록 판단 순서를 수정",
+    "홍천은 Stay Demand 75.93, Consensus Gap +12.31p, 평균 체류시간 935분(17/18위), 평균 숙박일수 2.47일(16/18위)로 기본 산식에서 고수요 9개 중 유일한 '양(+) Gap + Stay Depth<50' 혼합병목 우선진단 지역으로 도출",
+    {
+      table: {
+        corner: "Outcome-Aware Decision Matrix (고수요 9개 지역)",
+        colHeads: ["Gap ≤ 0 · 공급여유", "Gap > 0 · 공급압력"],
+        rows: [
+          { head: "Stay Depth ≥ 50\n(실제 체류 양호)", cells: [
+            "균형/효율\n강릉·동해\n(현 구조 유지·벤치마킹)",
+            "공급압력+체류성과 양호\n원주·춘천\n(가동률·ADR·성수기 공실 확인)",
+          ]},
+          { head: "Stay Depth < 50\n(실제 체류 약함)", cells: [
+            "체류깊이 개선\n속초·평창·양양·고성\n(야간·연박·동선·식음 연계)",
+            "혼합병목 우선진단\n홍천\n(공급병목+체류상품 동시 검증)",
+          ]},
+        ],
+      },
+    },
+    "시스템 구현 및 공개: 동일 원본에서 Demand/Supply/Outcome과 Decision Type을 재현하도록 분석 로직을 구성하고, 강원 18개 시군을 선택·비교하는 Production 웹 대시보드를 공개함 - https://tour-gap-dashboard.vercel.app",
+    "검증: Gap vs Stay Depth는 Spearman ρ=+0.011, p=0.964(n=18)로 현재 표본에서 단조 관계가 확인되지 않아 예측값에서 제외. 108개 민감도 조합에서 홍천·원주 핵심 유형은 108/108 유지했고, 별도 시간분할에서 홍천 no-spend 수요신호는 월별 12/12개월·rolling 6개월 7/7 고수요를 유지",
   ],
   outcome: [
-    "방문자수 증가율만으로는 파악할 수 없던 '숙박 공급 과잉 조짐'을, 양양군 사례에서 실제 성과 하락 1년 전 시차 패턴으로 검증(TOUR-GAP 128pt 초과 → 이듬해 숙박방문자비율 -3.0%p, 체류시간 -11.5%)",
-    "신안군처럼 수요 증가가 안정적인데도 공급이 낮은 지역은 TOUR-GAP이 낮게 유지되며 체류성과가 오히려 개선됨을 확인 - '공급 부족'이 항상 나쁜 신호가 아니라 투자 여력이 있는 신호일 수 있음을 데이터로 뒷받침",
-    "이 방법론은 데이터랩 공개 메뉴(방문자, 숙박업종별 세부현황, 숙박/체류시간)만으로 재현 가능해 전국 228개 시군구에 동일 적용 가능하며, 지자체 숙박 인허가 총량제·투자유치 우선순위 결정에 활용 가능",
-    "향후 전국 시군구로 확장해 TOUR-GAP 조기경보 임계값을 통계적으로 정교화하면, '숙박시설 증설이 필요한 지역'과 '이미 과잉인 지역'을 사전 스크리닝하는 대시보드로 발전 가능",
+    "분석성과: 강원 18개 시군을 수요·공급커버리지·실제 체류성과 3축으로 평가하고, 고수요 9개 지역을 4개 Decision Type으로 분류해 단일 Gap 순위를 지역별 후속전략으로 전환",
+    "데이터 품질성과: 인허가·폐업·취소·휴업일을 수요기간 종료일(2026-07-31)로 복원해 일반 숙박업 3,027개·96,511실, 관광숙박업 281개 스냅샷을 재구성하고 객실 수를 공급축에 반영",
+    "의사결정 개선성과: 공식 객실자료로 평창 공급공백 후보를 공급여유로 교정하고, 실제 outcome으로 원주 '숙박검색 약세=체류전환 약세' 가설을 폐기. 이후 홍천 1곳을 혼합병목 우선진단으로 도출",
+    "외적정합성: 분석 종료일(7/31) 이후 홍천군 공식자료에서 야시장(8/21~9/12)과 1박 2일 체류형 치유관광 시범투어(8/27~28)가 확인돼 '야간·체류형 상품 우선 검토'와 방향이 일치. 정책채택·인과 검증은 아니며 결과는 Production 대시보드로 재현·공개",
+    "기대효과: 공급검증·체류깊이 개선·혼합병목 동시검증·현 구조 유지의 4개 후속경로로 조사·사업기획 순서를 표준화해 공급투자·체류정책 오진 위험을 낮추는 사전진단에 활용 가능",
+    "파급·확장성: 동일 데이터가 제공되는 타 시군구에도 같은 산식·판정절차를 적용할 수 있고, 가동률·ADR·공실·교통·규제·입지를 추가하면 투자·상품기획 후속 판단으로 확장 가능",
+    "※ 실증 범위: 본 결과는 매출·예약 증가나 투자수익을 실증한 것이 아님. 사후 공식 정책자료의 방향 일치는 외적 정합성 근거이며 정책채택·효과·인과 검증을 의미하지 않음. TOUR-GAP은 '추가 검증이 필요한 문제 유형과 순서'를 정하는 의사결정 지원도구임.",
   ],
 };
-
-const FIGURES = [
-  { path: "report/figures/fig1_tourgap_index.png", caption: "그림1. TOUR-GAP 지수 추이 (양양군 vs 신안군)" },
-  { path: "report/figures/fig2_lodging_ratio.png", caption: "그림2. 숙박방문자 비율 추이 (양양군 vs 신안군, 전국 평균 대비)" },
-];
 
 (async () => {
   await buildForm1_1(V, SECTIONS.title);
   await buildForm2(V);
   await buildForm3(V);
-  await buildForm4(V, SECTIONS, FIGURES);
+  await buildForm4(V, SECTIONS);
 })();
