@@ -10,7 +10,7 @@ Configure `TOURGAP_SPREADSHEET_ID` in the existing script's private Script Prope
 
 The server preserves 15 survey columns and 9 event columns. It checks the study/type, allowed fields/form choices, UUIDs, timestamps and explicit consent before any Sheet access. Formula-leading strings receive a visible `TEXT: ` prefix, also applied in local CSV exports. Invalid requests return stable codes rather than internal exception text.
 
-New writes are bounded globally to 60/minute and 1,000/day (Asia/Seoul), serialized and deduplicated. These controls do not authenticate respondents or provide complete bot/DDoS protection. Anonymous public surveys can still receive fabricated but schema-valid answers or have their shared budget exhausted.
+New writes are bounded globally to 60/minute and 1,000/day (Asia/Seoul), serialized and deduplicated through a best-effort cache. Cache eviction or a failure between the Sheet write and cache update can still permit duplicates; this is not an exactly-once database transaction. These controls do not authenticate respondents or provide complete bot/DDoS protection. Anonymous public surveys can still receive fabricated but schema-valid answers or have their shared budget exhausted.
 
 Use GET only for fixed health/version metadata. `validation_only: true` validates a request without opening the Sheet or writing records. Run `verifyConfiguration` only in the owner's editor; it checks property/tab existence and column capacity, without reading response cells or appending a test row. Production verification must not add test responses or attack formulas to the real Sheet.
 
