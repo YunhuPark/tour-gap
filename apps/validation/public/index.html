@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>원주 1박 전환 실험 | TOUR-GAP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar"><div class="shell topbar-inner"><div class="brand"><span>TG</span><strong>TOUR-GAP Field Lab</strong></div><div class="pilot-badge">연구용 프로토타입 · 실제 판매상품 아님</div></div></header>
+  <main class="shell main">
+    <section class="intro"><p class="eyebrow">WONJU STAY CONVERSION · PHASE 8</p><h1>원주 여행, <span>하루 더 머물 이유</span>가 생긴다면?</h1><p>이 페이지는 원주 관광객의 당일치기→1박 전환 조건을 확인하기 위한 짧은 선택실험입니다. 이름·전화번호·이메일은 받지 않습니다.</p></section>
+    <section id="baseline" class="panel"><div class="step">1 / 3</div><h2>먼저 현재 생각을 알려주세요.</h2><div class="question"><label>원주를 관광 목적으로 간다면 현재 더 가까운 선택은?</label><div class="choice-grid two"><button type="button" data-baseline="당일치기">당일치기</button><button type="button" data-baseline="1박 이상">1박 이상</button></div></div><button id="baseline-next" class="primary" disabled>다음</button></section>
+    <section id="concept" class="panel hidden"><div class="step">2 / 3</div><p class="eyebrow dark">당신에게 무작위로 제시된 제안</p><article id="concept-card" class="concept-card"></article><p class="fineprint">※ 실제 예약 상품이 아니라, 동일한 수준의 혜택을 가정한 콘셉트 비교입니다.</p><button id="cta" class="primary wide">이 제안 자세히 보기</button><button id="concept-next" class="secondary wide">응답 계속하기</button></section>
+    <section id="survey" class="panel hidden"><div class="step">3 / 3</div><h2>마지막 1분 설문</h2><form id="survey-form">
+      <div class="question"><label for="intent">이 제안이 실제로 있다면 원주에서 1박할 의향은?</label><div class="likert" id="intent-options"><label><input type="radio" name="intent" value="1" required><span>1<br><small>전혀 없음</small></span></label><label><input type="radio" name="intent" value="2"><span>2</span></label><label><input type="radio" name="intent" value="3"><span>3</span></label><label><input type="radio" name="intent" value="4"><span>4</span></label><label><input type="radio" name="intent" value="5"><span>5<br><small>매우 높음</small></span></label></div></div>
+      <div class="question"><label>이 제안 이후 선택은?</label><div class="choice-grid two radio-buttons"><label><input type="radio" name="after" value="당일치기" required><span>그래도 당일치기</span></label><label><input type="radio" name="after" value="1박 이상"><span>1박 이상 고려</span></label></div></div>
+      <div class="question"><label for="trigger">원주에서 1박 의향을 가장 높이는 조건</label><select id="trigger" required><option value="">선택</option><option>야간 콘텐츠</option><option>숙박 혜택/할인</option><option>로컬 식음료 결합</option><option>교통 연계</option><option>가족형 숙소</option><option>청년형/호스텔형 숙소</option><option>늦은 체크아웃</option><option>기타</option></select></div>
+      <div class="question split"><div><label for="lodging">선호 숙박 유형</label><select id="lodging" required><option value="">선택</option><option>비즈니스/일반호텔</option><option>관광호텔</option><option>리조트/콘도</option><option>소형호텔</option><option>호스텔/게스트하우스</option><option>한옥/전통형</option><option>상관없음</option></select></div><div><label for="budget">1인 기준 1박 적정 예산</label><select id="budget" required><option value="">선택</option><option>5만원 미만</option><option>5~8만원</option><option>8~12만원</option><option>12~18만원</option><option>18만원 이상</option></select></div></div>
+      <div class="question split"><div><label for="age">연령대</label><select id="age" required><option value="">선택</option><option>10대</option><option>20대</option><option>30대</option><option>40대</option><option>50대</option><option>60대 이상</option></select></div><div><label for="residence">거주권역</label><select id="residence" required><option value="">선택</option><option>서울</option><option>경기/인천</option><option>강원</option><option>충청</option><option>전라</option><option>경상</option><option>제주/기타</option></select></div></div>
+      <div class="question"><label>최근 1년 내 원주 방문 경험</label><div class="choice-grid two radio-buttons"><label><input type="radio" name="visited" value="예" required><span>있음</span></label><label><input type="radio" name="visited" value="아니오"><span>없음</span></label></div></div>
+      <label class="consent"><input id="consent" type="checkbox" required><span>익명 응답과 이용 이벤트를 TOUR-GAP 경진대회 분석에 활용하는 데 동의합니다. 동의 후 이 기기에 저장하고 중앙 수집기로 전송합니다. 개인 식별정보는 수집하지 않습니다.</span></label><button class="primary wide" type="submit">익명 응답 제출</button>
+    </form></section>
+    <section id="thanks" class="panel hidden center"><div class="check">✓</div><h2>응답 제출 단계를 마쳤습니다.</h2><p id="thanks-copy">감사합니다.</p><button id="next-participant" class="primary">다음 응답자 시작</button><a class="admin-link" href="admin.html">수집 현황 / CSV 내보내기</a></section>
+    <section class="evidence-note"><strong>왜 이 실험을 하나요?</strong><p>TOUR-GAP은 강원 18개 시군 데이터에서 원주를 ‘전환+공급 재설계형’으로 진단했습니다. 이번 실험은 객실을 늘리기 전에, 야간·식음·1박을 결합한 체류 제안이 실제로 숙박 의향을 높이는지 먼저 확인합니다.</p></section>
+  </main>
+  <script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>
